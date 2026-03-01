@@ -1,0 +1,16 @@
+\section{Related Work}
+\label{sec:related_work}
+
+The idea of increasing inference-time computation to enhance Large Language Model (LLM) performance has roots in Chain-of-Thought (CoT) prompting \cite{wei2022chain} and has since evolved towards more latent or automated forms of "thinking."
+
+\para{Filler and Pause Tokens}
+Recent work has explored the use of "meaningless" tokens to provide models with additional computational steps. \citet{pfau2024think} show that Transformers can use simple filler tokens (e.g., ".......") to perform complex algorithmic tasks that are impossible in a single step. Similarly, \citet{goyal2023pause} introduced the "[PAUSE]" token, showing that pretraining and finetuning models with these delays significantly improves performance on benchmarks like SQuAD and GSM8K. Unlike our work, these approaches primarily focus on training-based implementations rather than prompt-level instructions.
+
+\para{Latent and Quiet Reasoning}
+A parallel line of research integrates reasoning directly into the generation process. Quiet-STaR \cite{zelikman2024quiet} enables LLMs to generate unstated rationales (internal thoughts) for any text, optimized through reinforcement learning. This allows the model to "think before speaking" without requiring explicit CoT prompts for every task. While our \bstrationale condition mimics this by requesting internal rationales, we focus on a prompted version that does not require additional training.
+
+\para{Computational Expressivity}
+The theoretical foundation for "thinking tokens" is supported by work on the expressivity of constant-depth Transformers. \citet{london2025pause} provide a formal proof that pause tokens strictly increase the computational power of these models. This theoretical benefit motivates our exploration of whether such increases in expressivity can be triggered through simple prompting in high-end models like \gpt.
+
+\para{Critiques and Limitations}
+Despite the promise of "thinking tokens," some research highlights their practical limitations. \citet{vennam2024rethinking} argue that thinking tokens often underperform compared to explicit CoT, potentially due to noisy gradients or inconsistent learning signals when using a single embedding for thoughts. Our work contributes to this critique by identifying 	extit{Model Shirking} as a key behavioral failure mode when these constraints are applied through prompting.

@@ -1,0 +1,39 @@
+\section{Results}
+\label{sec:results}
+
+Our experiments show that simply prompting \gpt to use \textit{Between-Sentence Thinking} (\bst) consistently degrades performance compared to standard zero-shot generation (\control). In this section, we present quantitative win rates and analyze the qualitative shifts that explain these findings.
+
+\subsection{Quantitative Performance}
+We evaluate the win rates of the different conditions across both \tqa and Creative Writing prompts. As shown in \tabref{tab:main_results}, the \control condition significantly outperforms both \bst variants in nearly all cases, regardless of whether the thinking tokens are present during evaluation.
+
+\begin{table}[h]
+\centering
+\caption{Win rates of \control vs. \bst conditions as judged by \gpt. 
+         Both raw and stripped outputs are evaluated. 
+         Best results in \textbf{bold}.}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Condition} & \tqa (Raw) & \tqa (Stripped) & Creative (Raw) & Creative (Stripped) \\
+\midrule
+\control (A) & {\bf 19 / 20} & {\bf 19 / 20} & {\bf 3 / 3} & {\bf 3 / 3} \\
+\bstfiller (B) & 1 / 20 & 1 / 20 & 0 / 3 & 0 / 3 \\
+\bstrationale (C) & 0 / 20 & 0 / 20 & 0 / 3 & 0 / 3 \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:main_results}
+\end{table}
+
+The \control model consistently produces responses that are more truthful, detailed, and comprehensive. The judges' preference for \control remains stable even when the filler dots or internal rationales are removed, suggesting that the performance degradation is inherent to the quality of the generated text itself.
+
+\subsection{Model Shirking: The Laziness Effect}
+The most prominent qualitative effect of the \bst constraint is a drastic reduction in response length and detail. We term this phenomenon \textit{Model Shirking}. When faced with the additional task of generating thinking tokens between every sentence, the model appears to minimize its total computational effort by writing as few sentences as possible.
+
+On average, \bstfiller and \bstrationale responses are 50--70\% shorter than those from the \control condition. For example, in the Creative Writing tasks, the \control model produces nuanced, multi-layered narratives, while the \bst variants provide brief, summary-like versions of the same prompts. This reduction in length directly impacts "Qualitative Depth" and "Carefulness," as the models omit necessary nuances, caveats, and comprehensive details that were present in the \control outputs.
+
+\subsection{Analysis of Rationale Quality}
+In the \bstrationale condition, we find that the generated internal thoughts are often superficial and do not contribute to meaningful planning. Common rationales include phrases such as "I should add more detail now" or "I will continue with the next point," rather than provide deep semantic reasoning. This suggests that without specialized training (e.g., Quiet-STaR), models do not naturally utilize forced rationale steps for significant computation when prompted. Instead, the rationale generation task is treated as an overhead cost to be minimized.
+
+\subsection{The Richard Branson Outlier}
+In exactly one case within the \tqa subset—a question regarding Richard Branson—the \bstfiller condition outperformed the \control. In this instance, the forced filler tokens happened to coincide with a more detailed biographical account. However, this result was a significant outlier (1 out of 23 total prompts) and does not represent a general trend towards improved performance.

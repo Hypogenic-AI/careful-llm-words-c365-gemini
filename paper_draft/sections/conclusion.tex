@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+In this research, we investigate whether Large Language Models (LLMs) can be prompted to use "thinking tokens" between sentences to enhance their truthfulness and qualitative depth. Our core paradigm, 	extit{Between-Sentence Thinking} (\bst), was tested across 	qa and complex creative writing tasks. Contrary to the "dot-by-dot" computation hypothesis, we find that simply prompting \gpt to use \bst consistently degrades performance.
+
+The primary failure mode identified is 	extit{Model Shirking}: the model perceives the additional token requirement as a cost and responds by drastically reducing the length and detail of its responses. Control models significantly outperformed \bst variants in 19 out of 20 	qa cases and 100\% of creative writing tasks, even when evaluated on stripped outputs. Our results suggest that while theoretical and trained "thinking token" approaches have shown promise, simple prompt-level instructions for extra computation are counterproductive for high-end models like \gpt.
+
+Future work should explore whether training or finetuning a model (e.g., Llama-3) on specific pause tokens can overcome the shirking effect observed here. Additionally, experimenting with "hidden" tokens in the model's KV cache—tokens that are not part of the final generated text—may provide a more robust way to trigger increased inference-time computation without triggering the model's tendency towards token efficiency.

@@ -1,0 +1,19 @@
+\section{Discussion}
+\label{sec:discussion}
+
+The failure of prompted \textit{Between-Sentence Thinking} (\bst) to improve model performance stands in contrast to existing literature on training-based "thinking tokens" \cite{goyal2023pause, zelikman2024quiet, pfau2024think}. In this section, we discuss the potential reasons for this discrepancy and the broader implications for inference-time computation.
+
+\para{Prompting vs. Training for Thinking Tokens}
+While theoretical models \cite{london2025pause} and specialized training regimes \cite{goyal2023pause} show that extra tokens can increase Transformer expressivity, our results suggest that this benefit is not automatically triggered through simple prompting in state-of-the-art models like \gpt. In training-based approaches, models are optimized to use the extra computational steps to improve their final output. In contrast, for a purely prompted model, the additional tokens are perceived as a cost or "overhead." Without being specifically aligned to use these pauses for deeper reasoning, the model treats the instruction as a chore to be completed with minimal effort.
+
+\para{Token Efficiency and Model Shirking}
+The pervasive "Model Shirking" effect we observed highlights an important aspect of LLM behavior: a strong internal bias towards token efficiency. When faced with the additional task of generating dots or internal rationales between every sentence, \gpt responds by drastically reducing the number of sentences it produces. This "laziness" suggests that high-end models have learned to balance task completion with token count, potentially due to RLHF or other alignment techniques that penalize unnecessarily long or repetitive outputs. In our \bst conditions, the overhead of the thinking tokens overrides any potential reasoning gains, as the model "shirks" its primary task to minimize its total token budget.
+
+\para{Rationale Quality and Internal Reasoning}
+In the \bstrationale condition, the generated thoughts were often superficial and failed to provide meaningful planning. This confirms that simply requesting "thoughts" is insufficient for complex reasoning if the model is not trained to use those thoughts as an internal scratchpad. Unlike Chain-of-Thought (CoT) prompting, where the reasoning steps are presented as a coherent logical flow towards an answer, the between-sentence rationales we requested were treated as disconnected meta-comments, providing little to no semantic benefit.
+
+\para{Limitations}
+Our study is limited by its focus on a single state-of-the-art model (\gpt) and a specific subset of benchmarks (\tqa and Creative Writing). It is possible that other models, or different prompting strategies (e.g., length-controlled evaluation or minimum sentence count constraints), might yield different results. Furthermore, our approach was purely prompt-level; we did not explore "hidden" tokens in the KV cache, which would require local model access and could potentially bypass the shirking effect observed here.
+
+\para{Broader Implications}
+These findings underscore the importance of distinguishing between the \textit{theoretical potential} for increased computation and its \textit{practical application} through simple interfaces. While "thinking before speaking" is a desirable trait in LLMs, our research indicates that simple prompt-level instructions are not a shortcut to achieving it. Effective inference-time compute requires either specialized training or more sophisticated architectural interventions to ensure the extra computational steps are used productively rather than avoided.

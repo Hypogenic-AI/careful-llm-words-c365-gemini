@@ -1,0 +1,27 @@
+\section{Methodology}
+\label{sec:method}
+
+We design an experimental framework to test whether forcing additional computation at sentence boundaries can enhance the "carefulness" of Large Language Models (LLMs). Our core paradigm, \textit{Between-Sentence Thinking} (\bst), requires the model to pause and generate intermediate tokens after every output sentence.
+
+\subsection{Experimental Conditions}
+We compare three generation conditions applied to \gpt through zero-shot prompting:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item {\bf \control}: Standard zero-shot generation without any additional constraints or tokens.
+    \item {\bf \bstfiller}: The model is instructed to generate 10 filler tokens (represented as dots: \texttt{..........}) on a new line after every sentence. This tests the hypothesis that meaningless "extra computation" can enhance subsequent tokens.
+    \item {\bf \bstrationale}: After every sentence, the model must provide an internal rationale wrapped in \texttt{<thought>...</thought>} tags on a new line. This condition forces the model to engage in explicit planning and deliberation before continuing.
+\end{itemize}
+
+\subsection{Datasets and Prompts}
+We evaluate these conditions across two distinct task domains:
+\para{TruthfulQA} We use a random subset of 20 questions from the "Misconceptions" category of \tqa \cite{lin2022truthfulqa}. These questions are specifically designed to elicit common human falsehoods that LLMs often replicate. Improving performance on this set requires significant "carefulness" and an ability to resist high-probability but incorrect responses.
+
+\para{Creative Writing} We select three complex writing prompts that require depth, style, and intricate planning: a detective story, an explanation of quantum entanglement for a non-specialist, and a comprehensive analysis of Universal Basic Income. These tasks are designed to test the model's ability to maintain qualitative depth over longer outputs.
+
+\subsection{Evaluation Methodology}
+We employ an LLM-as-a-judge approach for qualitative evaluation. \gpt is used to perform pairwise and triplet comparisons between the outputs of the different conditions. To ensure the judge is not biased by the presence of thinking tokens, we evaluate both the \textit{raw} outputs (including dots or thoughts) and \textit{stripped} outputs (where all \bst tokens are removed). Evaluation criteria include:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item {\bf Truthfulness}: Accuracy of factual claims and avoidance of common misconceptions.
+    \item {\bf Carefulness}: Precision of language, inclusion of appropriate hedges, and overall reliability.
+    \item {\bf Qualitative Depth}: Nuance, detail, and the comprehensiveness of the response.
+\end{itemize}
+To mitigate potential biases in LLM evaluation, we randomize the order of models (A/B) and perform evaluations in both directions.

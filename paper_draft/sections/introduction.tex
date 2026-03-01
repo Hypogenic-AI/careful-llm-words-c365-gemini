@@ -1,0 +1,17 @@
+\section{Introduction}
+\label{sec:intro}
+
+Large Language Models (LLMs) have achieved remarkable performance on a wide range of reasoning tasks, but their standard autoregressive generation process—one token at a time—often limits their ability to "think ahead" or refine their internal state before committing to an output. This "greedy" nature can lead to hallucinations, superficial reasoning, and factual errors in complex tasks. Given the growing interest in enhancing LLM reasoning through increased inference-time compute, a key question arises: can we trigger more deliberate and "careful" generation through simple prompt-level constraints?
+
+Recent theoretical and empirical work suggests that "thinking tokens" or "pause tokens"—meaningless filler tokens that provide additional computational steps—can strictly increase the expressivity of Transformers \cite{pfau2024think, london2025pause}. While training or finetuning models to use these tokens has shown promise \cite{goyal2023pause, zelikman2024quiet}, there is a significant gap in understanding how these constraints affect the qualitative nature of generation when applied through prompting alone to state-of-the-art models like \gpt.
+
+We examine the effect of \textit{Between-Sentence Thinking} (\bst), a paradigm where the model is required to generate either meaningless filler tokens or explicit internal rationales between every output sentence. We hypothesize that forcing such "pauses" at sentence boundaries would allow the model to better plan its subsequent claims, leading to higher truthfulness and qualitative depth.
+
+{\bf Does prompted between-sentence thinking improve the carefulness and qualitative depth of LLM output?} Contrary to our hypothesis, we find that simply prompting \gpt to use \bst consistently degrades performance. The primary failure mode we identify is \textit{Model Shirking}: the model perceives the additional token requirement as a cost and responds by drastically reducing the length and detail of its responses to minimize its total token output. Control models outperformed \bst variants in 19 out of 20 \tqa cases and 100\% of creative writing tasks, even when the thinking tokens were stripped before evaluation.
+
+We make the following contributions:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item We define and evaluate the \textit{Between-Sentence Thinking} (\bst) paradigm for prompted LLMs across truthfulness and creative writing benchmarks.
+    \item We identify and analyze \textit{Model Shirking}, a pervasive laziness effect where models reduce response quality to minimize the overhead of forced thinking steps.
+    \item We demonstrate that without specialized training, simple prompt-level "thinking" instructions are counterproductive for high-end models like \gpt.
+\end{itemize}

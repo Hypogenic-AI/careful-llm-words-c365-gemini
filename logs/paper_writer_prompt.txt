@@ -1,0 +1,453 @@
+You are an academic paper writer. Generate a complete NEURIPS style paper
+based on the experiment results provided.
+
+════════════════════════════════════════════════════════════════════════════════
+                         IMPORTANT: BEFORE YOU START
+════════════════════════════════════════════════════════════════════════════════
+
+Before writing any content, you MUST complete these steps:
+
+1. READ THE SKILL: Review the paper-writer skill at .gemini/skills/paper-writer/SKILL.md
+2. READ THE STYLE GUIDE: Study templates/paper_writing/lab_style_guide.md carefully
+3. REVIEW EXAMPLES: Browse paper_examples/ for formatting and language patterns:
+   - Look at sections/1.introduction.tex for language style
+   - Look at tables/*.tex for table formatting
+   - Look at commands/*.tex for macro usage
+4. VERIFY COMMAND TEMPLATES: Command templates (math.tex, general.tex, macros.tex) are pre-copied to paper_draft/commands/
+
+CRITICAL: Reference example papers for FORMATTING and LANGUAGE STYLE only.
+Do NOT copy content, phrasing, or narrative structure from the example papers.
+The examples are in a different research domain - focus only on presentation style.
+
+════════════════════════════════════════════════════════════════════════════════
+                            EXPERIMENT REPORT
+════════════════════════════════════════════════════════════════════════════════
+
+# REPORT: An LLM That&#39;s Careful With Its Words
+
+## 1. Executive Summary
+This research investigated whether requiring a Large Language Model (LLM) to generate &#34;thinking tokens&#34; (either meaningless filler tokens or explicit internal rationales) between every sentence would improve its &#34;carefulness,&#34; truthfulness, and qualitative depth. We hypothesized that this &#34;Between-Sentence Thinking&#34; (BST) would force the model to deliberate more on each claim.
+
+**Key Finding:** Contrary to our hypothesis, requiring thinking tokens via prompting in a state-of-the-art model (GPT-4o) **consistently degraded** performance across both TruthfulQA and creative writing tasks. The primary qualitative shift was **&#34;Model Shirking&#34;**: when faced with the extra &#34;chore&#34; of generating thinking tokens, the model produced significantly shorter, less detailed, and less comprehensive responses to minimize its total token output. Control models outperformed BST models in 95% of TruthfulQA cases and 100% of creative writing cases, even after the thinking tokens were stripped for evaluation.
+
+## 2. Goal
+The goal was to test if increasing inference-time computation at the sentence boundaries of a prompted LLM would lead to more &#34;careful&#34; and insightful generation. We aimed to see if the &#34;dot-by-dot&#34; computation effect (Pfau et al., 2024) could be triggered through simple prompting without specialized training.
+
+## 3. Data Construction
+- **TruthfulQA (Subset):** We used a 20-question random subset from the TruthfulQA &#34;generation&#34; set (Misconceptions category). This dataset is designed to elicit common human falsehoods that LLMs often replicate.
+- **Creative Writing Prompts:** A set of 3 complex prompts (Detective Story, Quantum Entanglement Explanation, Universal Basic Income Analysis) designed to test depth, style, and reasoning.
+
+## 4. Experiment Description
+We compared three conditions:
+1. **Control:** Standard zero-shot prompting.
+2. **BST-Filler:** Requirement to generate 10 dots (`..........`) after every sentence on a new line.
+3. **BST-Rationale:** Requirement to generate an internal rationale wrapped in `&lt;thought&gt;...&lt;/thought&gt;` after every sentence on a new line.
+
+### Methodology
+- **Model:** `gpt-4o` (OpenAI).
+- **Evaluator:** `gpt-4o` as a judge (Pairwise/Triplet comparison).
+- **Evaluation Criteria:** Truthfulness, Carefulness, Qualitative Depth.
+- **Fairness:** Evaluations were performed both on raw outputs and &#34;stripped&#34; outputs (where thinking tokens were removed) to ensure the judge wasn&#39;t biased by the formatting itself.
+
+## 5. Result Analysis
+
+### Quantitative Results (Win Rates)
+| Condition | TruthfulQA (Raw) | TruthfulQA (Stripped) | Creative (Raw) | Creative (Stripped) |
+|-----------|------------------|-----------------------|----------------|---------------------|
+| Control (A)| **19 / 20**      | **19 / 20**           | **3 / 3**      | **3 / 3**           |
+| BST-Filler (B)| 1 / 20        | 1 / 20                | 0 / 3          | 0 / 3               |
+| BST-Rationale (C)| 0 / 20     | 0 / 20                | 0 / 3          | 0 / 3               |
+
+### Key Findings
+1. **Model Shirking (Laziness):** The most prominent effect of the BST constraint was a drastic reduction in response length. On average, BST-Filler responses were **50-70% shorter** than Control responses. The model clearly attempted to minimize the number of sentences it wrote to avoid the repetitive task of generating dots or rationales.
+2. **Degraded Depth:** Because the responses were shorter, they lacked the nuances, caveats, and comprehensive details present in the Control group. The LLM judge consistently ranked the Control group higher on &#34;Qualitative Depth&#34; and &#34;Carefulness&#34; due to this missing detail.
+3. **Rationale Quality:** In the BST-Rationale condition, the generated thoughts were often superficial (e.g., &#34;I should add more detail now&#34;) rather than providing deep semantic planning. This suggests that without reinforcement learning (as in Quiet-STaR or DeepSeek-R1), models do not naturally use forced rationale steps for meaningful computation when prompted.
+
+### Surprises
+In exactly one case (TruthfulQA question about Richard Branson), BST-Filler outperformed the Control. In this instance, the filler tokens seemed to coincide with a more detailed biographical account, but this was a significant outlier.
+
+## 6. Conclusions
+While theoretical and trained &#34;thinking token&#34; approaches (like Pause Tokens) have shown promise, **simply prompting** a high-end model to use thinking tokens between sentences is ineffective and actually counterproductive. The model perceives the instruction as an overhead cost and responds with &#34;laziness,&#34; resulting in qualitatively inferior text that is less careful and less informative.
+
+## 7. Next Steps
+1. **Finetuning vs. Prompting:** Replicate this with a finetuned model (e.g., Llama-3-70B finetuned on [PAUSE] tokens) to see if training overcomes the laziness effect.
+2. **Length-Controlled Evaluation:** Rerun the experiment with a minimum sentence count constraint to force the model to be detailed despite the BST overhead.
+3. **Implicit Pause:** Experiment with &#34;hidden&#34; tokens that are not generated as part of the text but are part of the model&#39;s KV cache (requires local model access).
+
+
+════════════════════════════════════════════════════════════════════════════════
+                            RESEARCH PLAN
+════════════════════════════════════════════════════════════════════════════════
+
+# Planning: An LLM That&#39;s Careful With Its Words
+
+## Motivation &amp; Novelty Assessment
+
+### Why This Research Matters
+As LLMs are increasingly used for critical tasks, ensuring they &#34;think&#34; before they &#34;speak&#34; is vital. Standard LLMs generate text token-by-token in a greedy or sampled fashion, often leading to hallucinations or superficial reasoning. Requiring &#34;thinking time&#34; between sentences could allow the model to refine its internal state and produce more deliberate, accurate, and high-quality text.
+
+### Gap in Existing Work
+Most work on thinking tokens (Pause Tokens, Quiet-STaR, Filler Tokens) focuses on training or finetuning models to use these tokens. There is less exploration of how simple *prompt-level* constraints requiring thinking tokens between sentences affect the qualitative nature of the output in high-level tasks, especially using state-of-the-art models via APIs.
+
+### Our Novel Contribution
+We will investigate the &#34;Between-Sentence Thinking&#34; (BST) paradigm using prompting with SOTA LLMs. We specifically look at the *qualitative* shifts in language (carefulness, precision, depth) when a model is forced to pause and &#34;reason&#34; (even with filler tokens or hidden thoughts) between every sentence.
+
+### Experiment Justification
+- **Experiment 1 (TruthfulQA):** Tests if BST reduces hallucinations/misconceptions (carefulness).
+- **Experiment 2 (Creative/Complex Writing):** Tests the qualitative difference in text style and depth using LLM-as-a-judge.
+- **Experiment 3 (Ablation):** Compares &#34;Meaningless Fillers&#34; vs &#34;Explicit Rationales&#34; between sentences.
+
+## Research Question
+Does requiring an LLM to generate &#34;thinking tokens&#34; between every sentence improve the carefulness and qualitative depth of its output?
+
+## Hypothesis Decomposition
+1. **H1:** Forcing pauses (thinking tokens) between sentences leads to higher scores on truthfulness benchmarks.
+2. **H2:** The resulting text is perceived as more &#34;deliberate&#34; and &#34;comprehensive&#34; by independent evaluators.
+3. **H3:** Explicit rationales (CoT) between sentences are more effective than meaningless filler tokens.
+
+## Proposed Methodology
+
+### Approach
+We will use GPT-4o (via OpenRouter or OpenAI API) to perform tasks under three conditions:
+1. **Control:** Standard generation.
+2. **BST-Filler:** Insert 10 filler tokens (e.g., `.` or `[thinking]`) between sentences.
+3. **BST-Rationale:** Generate a 1-sentence internal rationale between every output sentence.
+
+### Experimental Steps
+1. **Setup:** Configure API access and select prompts from TruthfulQA and a set of &#34;Complex Planning/Writing&#34; prompts.
+2. **Implementation:** Create a wrapper that prompts the model to follow the BST constraints.
+3. **Execution:** Run the models on the selected prompts.
+4. **Analysis:**
+    - Use TruthfulQA evaluation metrics.
+    - Use an LLM-as-a-judge (GPT-4o) to compare outputs pairwise (A/B testing) for &#34;carefulness&#34;, &#34;clarity&#34;, and &#34;depth&#34;.
+
+### Baselines
+- Standard Zero-shot (Control).
+- Standard Chain-of-Thought (at the beginning of the response).
+
+### Evaluation Metrics
+- **TruthfulQA Accuracy/Truthfulness.**
+- **Win-rate** in pairwise qualitative comparisons.
+- **Perplexity/Diversity** metrics (optional).
+
+### Statistical Analysis Plan
+- T-tests for TruthfulQA scores.
+- Binomial tests for pairwise win-rates.
+
+## Expected Outcomes
+We expect BST-Rationale to significantly improve carefulness. BST-Filler might show marginal improvements or even degradation if the model isn&#39;t trained to use them, but it tests the &#34;hidden computation&#34; hypothesis for prompted models.
+
+## Success Criteria
+- Statistically significant improvement in TruthfulQA or qualitative win-rate for BST methods over control.
+- Clear qualitative distinction identified in the text (e.g., more hedges, more precise terms).
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          LITERATURE REVIEW
+════════════════════════════════════════════════════════════════════════════════
+
+# Literature Review: An LLM That&#39;s Careful With Its Words
+
+## Research Area Overview
+The research focuses on enhancing the reasoning capabilities and output quality of Large Language Models (LLMs) by increasing inference-time computation. Specifically, it explores the use of &#34;thinking tokens&#34; or &#34;pause tokens&#34;—intermediate tokens that do not necessarily represent human-readable reasoning but provide the model with additional computational steps before generating the final output.
+
+## Key Papers
+
+### 1. Let&#39;s Think Dot by Dot: Hidden Computation in Transformer Language Models (2024)
+- **Authors**: Jacob Pfau, William Merrill, Samuel R. Bowman
+- **arXiv**: 2404.15758
+- **Key Contribution**: Shows that transformers can use &#34;meaningless filler tokens&#34; (e.g., &#39;......&#39;) to perform complex computations that they cannot perform in a single step.
+- **Methodology**: Evaluates models on hard algorithmic tasks (e.g., parity, 3SUM) with and without filler tokens.
+- **Results**: Filler tokens can substitute for Chain-of-Thought (CoT) in certain tasks, but training models to use them effectively is difficult and requires specific supervision.
+- **Relevance**: Directly supports the hypothesis that extra tokens (even if meaningless) can improve model &#34;carefulness&#34; or computational depth.
+
+### 2. Think Before You Speak: Training Language Models With Pause Tokens (2023)
+- **Authors**: Sachin Goyal et al.
+- **arXiv**: 2310.02226
+- **Key Contribution**: Introduces the &#34;[PAUSE]&#34; token as a way to delay output and allow for extra computation.
+- **Methodology**: Pretrains and finetunes models with sequences of [PAUSE] tokens.
+- **Results**: Significant gains on SQuAD (+18% EM), CommonSenseQA (+8%), and GSM8K when models are trained with these delays.
+- **Relevance**: Provides a practical implementation of &#34;thinking tokens&#34; and shows empirical benefits for reasoning.
+
+### 3. Quiet-STaR: Language Models Can Teach Themselves to Think Before Speaking (2024)
+- **Authors**: Eric Zelikman et al.
+- **arXiv**: 2403.09629
+- **Key Contribution**: Generalizes the Self-Taught Reasoner (STaR) to allow LMs to generate unstated rationales (internal thoughts) for *any* text, not just QA.
+- **Methodology**: Tokenwise parallel sampling of rationales at each token, optimized via reinforcement learning (REINFORCE).
+- **Results**: Improvements on GSM8K and CommonsenseQA without task-specific finetuning.
+- **Relevance**: Shows that &#34;thinking&#34; can be integrated into the general generation process, making the model more &#34;careful&#34; with every token.
+
+### 4. Pause Tokens Strictly Increase the Expressivity of Constant-Depth Transformers (2025)
+- **Authors**: Charles London, Varun Kanade
+- **arXiv**: 2505.21024
+- **Key Contribution**: Provides a formal theoretical separation proving that pause tokens strictly increase the computational expressivity of constant-depth Transformers.
+- **Relevance**: Offers a theoretical foundation for why the proposed hypothesis (extra tokens -&gt; more careful/better generation) should hold.
+
+### 5. Rethinking Thinking Tokens: Understanding Why They Underperform in Practice (2024)
+- **Authors**: Sreeram Vennam et al.
+- **arXiv**: 2411.11371
+- **Key Contribution**: Critiques the &#34;Thinking Tokens&#34; approach, showing it often underperforms compared to explicit CoT.
+- **Findings**: Reliance on a single embedding for thinking tokens may lead to noisy gradients and inconsistent learning signals.
+- **Relevance**: Provides a necessary counter-perspective and highlights potential pitfalls (e.g., the need for diverse or learned embeddings for thoughts).
+
+## Common Methodologies
+1. **Filler/Pause Tokens**: Inserting a fixed or learned token multiple times before the answer.
+2. **Latent/Quiet Reasoning**: Generating rationales that are either hidden or used to influence the next &#34;real&#34; token.
+3. **Reinforcement Learning**: Using RL (like REINFORCE or GRPO) to reward the model when &#34;thinking&#34; leads to better predictions.
+
+## Standard Baselines
+- **Standard Greedy/Sampling**: No extra tokens.
+- **Chain-of-Thought (CoT)**: Explicit human-readable reasoning steps.
+- **Self-Consistency**: Multiple CoT paths and majority voting.
+
+## Evaluation Metrics
+- **Accuracy/Exact Match**: For benchmarks like GSM8K, SQuAD.
+- **Perplexity**: For general text generation quality.
+- **Human Evaluation / LLM-as-a-Judge**: For qualitative differences in text (as mentioned in the hypothesis).
+
+## Recommendations for Our Experiment
+1. **Implementation**: Use a special `&lt;thought&gt;` token or simple filler tokens like `.` or `...` between sentences.
+2. **Datasets**: Use **GSM8K** for reasoning and **TruthfulQA** for &#34;carefulness&#34; in factual claims.
+3. **Evaluation**: Compare standard output vs. &#34;Thinking Token&#34; output using an LLM-as-a-judge (e.g., GPT-4) to assess &#34;carefulness&#34;, &#34;depth&#34;, and &#34;qualitative differences&#34;.
+4. **Contrast**: Specifically test the &#34;between every sentence&#34; constraint as proposed in the hypothesis.
+
+
+════════════════════════════════════════════════════════════════════════════════
+                          PAPER REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+Generate a complete academic paper with the following structure:
+
+1. TITLE
+   - Clear, specific, informative
+   - Should convey main finding or contribution
+
+2. AUTHOR
+   - Use this exact author line in the \author{} block: Ari Holtzman and Idea-Explorer
+
+3. ABSTRACT (150-250 words)
+   - Problem statement
+   - Approach
+   - Key results
+   - Significance
+
+4. INTRODUCTION
+   - Research problem and motivation
+   - Gap in existing work
+   - Our contribution (be specific)
+   - Paper organization
+
+5. RELATED WORK
+   - Organized by theme/approach
+   - Position our work relative to prior work
+   - Cite papers from literature review
+
+6. METHODOLOGY
+   - Clear description of approach
+   - Experimental setup
+   - Datasets used
+   - Evaluation metrics
+   - Baselines
+
+7. RESULTS
+   - Present results with tables and figures
+   - Statistical analysis
+   - Comparison to baselines
+   - Ablation studies (if applicable)
+
+8. DISCUSSION
+   - Interpretation of results
+   - Limitations
+   - Broader implications
+
+9. CONCLUSION
+   - Summary of contributions
+   - Key findings
+   - Future work
+
+10. REFERENCES
+   - BibTeX format
+   - All cited papers
+
+════════════════════════════════════════════════════════════════════════════════
+                          OUTPUT FORMAT
+════════════════════════════════════════════════════════════════════════════════
+
+Create a MODULAR LaTeX project with the following directory structure:
+
+paper_draft/
+├── main.tex              # Main file that imports all sections
+├── references.bib        # BibTeX references
+├── sections/
+│   ├── abstract.tex      # Abstract content
+│   ├── introduction.tex  # Introduction section
+│   ├── related_work.tex  # Related work section
+│   ├── methodology.tex   # Methodology section
+│   ├── results.tex       # Results section
+│   ├── discussion.tex    # Discussion section
+│   └── conclusion.tex    # Conclusion section
+├── figures/              # Directory for any generated figures
+├── tables/               # Directory for complex standalone tables
+└── appendix/             # Directory for appendix sections (if needed)
+
+INSTRUCTIONS:
+1. First, create the directory structure above (mkdir -p paper_draft/sections paper_draft/figures paper_draft/tables paper_draft/appendix)
+2. Write main.tex using the EXACT preamble for NEURIPS:
+
+   \documentclass{article}
+   \usepackage[final]{neurips_2025}  % NEURIPS style (neurips_2025.sty is in paper_draft/)
+   \usepackage[hidelinks]{hyperref}  % REQUIRED: clickable links
+   \usepackage{booktabs}  % REQUIRED: professional tables
+   \usepackage{graphicx}
+   \usepackage{amsmath,amssymb}
+
+   % Import command files
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+   % Use this bibliography style:
+   \bibliographystyle{plainnat}
+
+   \author{Ari Holtzman and Idea-Explorer}
+
+   - Use \input{sections/...} to include each section
+   - Use \bibliography{references} for references
+3. Write each section file with COMPLETE content (no placeholders)
+4. Each section file should include its \section{} command
+5. Write references.bib with all citations in BibTeX format
+6. After writing all files, compile the paper:
+   cd paper_draft && pdflatex -interaction=nonstopmode main.tex && bibtex main && pdflatex -interaction=nonstopmode main.tex && pdflatex -interaction=nonstopmode main.tex
+
+This modular structure allows humans to easily:
+- Edit individual sections without navigating a large file
+- Track changes per section
+- Reuse sections across different paper versions
+
+════════════════════════════════════════════════════════════════════════════════
+                          QUALITY REQUIREMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+- Academic tone throughout
+- All claims must be supported by data from the experiment report
+- Proper citations using \cite{} commands
+- Clear figures and tables with proper captions
+- NO placeholder text - every section must have real content
+- The paper MUST compile without errors
+- If compilation fails, debug and fix the LaTeX errors
+
+════════════════════════════════════════════════════════════════════════════════
+                          LAB WRITING STYLE
+════════════════════════════════════════════════════════════════════════════════
+
+Follow these lab-specific conventions to match our paper style:
+
+1. LANGUAGE STYLE:
+   - Use active voice: "We propose", "We examine", "We focus on"
+   - Be direct and confident: "Our main question is...", "We hypothesize that..."
+   - State things clearly and simply - prefer plain language over jargon
+   - Use bold questions as paragraph organizers: {\bf what is X?}
+   - Include specific quantitative claims: "8.97% over baseline"
+   - Avoid fancy wording: "utilize" → "use", "facilitate" → "help"
+
+2. INTRODUCTION STRUCTURE:
+   - Engaging hook (get to the point quickly)
+   - Problem importance
+   - Gap identification
+   - Your approach with method figure reference
+   - Quantitative preview of results
+   - Contribution bullets (3-4 items, action verbs)
+
+3. CONTRIBUTION LISTS:
+   \begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+       \item We propose...
+       \item We conduct...
+       \item We complement...
+   \end{itemize}
+
+4. MODULAR COMMANDS STRUCTURE:
+   Command templates are pre-copied to paper_draft/commands/:
+   - math.tex: Math notation macros
+   - general.tex: Formatting macros
+   - macros.tex: Project-specific term definitions (customize this for your paper)
+
+   In main.tex, include:
+   \input{commands/math}
+   \input{commands/general}
+   \input{commands/macros}
+
+5. REFERENCE CONVENTIONS:
+   Use reference macros from math.tex:
+   - \figref{fig:name} for "figure 1" (lowercase, in-sentence)
+   - \Figref{fig:name} for "Figure 1" (capitalized, start of sentence)
+   - \secref{sec:name} for "section 2"
+
+6. TEXT FORMATTING:
+   - Use \para{Header text} for bold paragraph headers
+   - Define method/dataset names with \textsc and \xspace:
+     \newcommand{\methodname}{\textsc{MethodName}\xspace}
+
+7. TABLE FORMATTING:
+   - Use booktabs package (no vertical lines)
+   - Use \resizebox{\textwidth}{!}{...} for wide tables
+   - Use @{} to remove padding at table edges
+   - Use \cmidrule(lr){x-y} for sub-headers
+   - Use \textsc{} for dataset/method names in headers
+   - Bold best results with {\bf ...}
+
+8. FIGURE FORMATTING:
+   - Use 0.32\textwidth for 3-column subfigures
+   - Use 0.95\linewidth for full-width figures
+   - Use \input{figures/legend} for shared legends
+   - Write self-contained captions explaining key observations
+
+9. RESULTS PRESENTATION:
+   - Define \increase and \decrease for colored arrows (green up, red down)
+   - Bold best results in tables
+   - Report confidence intervals when available
+
+10. ALGORITHM STYLING:
+    - Use algpseudocode with [noend]
+    - Use \triangleright for comments
+
+11. HYPERLINKS (REQUIRED):
+    - Always use \usepackage[hidelinks]{hyperref} or with colored links
+    - All citations, section refs, figure refs, table refs must be clickable
+    - This is essential for reader navigation
+
+════════════════════════════════════════════════════════════════════════════════
+                          WORKFLOW: REVIEW AND REFLECT
+════════════════════════════════════════════════════════════════════════════════
+
+Before calling finish, you MUST complete these review steps:
+
+1. REVIEW RESOURCES (at the start):
+   - Read .gemini/skills/paper-writer/SKILL.md for detailed guidance
+   - Study templates/paper_writing/lab_style_guide.md for style conventions
+   - Browse paper_examples/ for formatting and language patterns
+
+2. SELF-REFLECTION (before finishing):
+   After writing all sections, review your work against these criteria:
+
+   LANGUAGE CHECK:
+   - [ ] Is the writing clear and jargon-free?
+   - [ ] Are claims specific with quantitative support?
+   - [ ] Is active voice used throughout?
+
+   FORMATTING CHECK:
+   - [ ] Does main.tex include \input{commands/math}, \input{commands/general}, \input{commands/macros}?
+   - [ ] Is hyperref package included for clickable references?
+   - [ ] Do tables use booktabs (no vertical lines)?
+   - [ ] Are best results bolded in tables?
+   - [ ] Are figures/tables properly captioned?
+
+   STRUCTURE CHECK:
+   - [ ] Does introduction follow: hook → importance → gap → approach → preview → contributions?
+   - [ ] Are contribution bullets specific with action verbs?
+   - [ ] Does the paper compile without errors?
+
+3. FIX ISSUES:
+   - Address any issues found in the self-reflection
+   - Re-compile and verify the PDF looks correct
+
+Only after completing this review should you consider the paper finished.
